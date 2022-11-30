@@ -43,7 +43,7 @@ export default function ViewRequests() {
   }, [page_loaded]);
 
   const requestFormSubmit = () => {
-    const manhoos = {temp_cnic: user_cnic};
+    const manhoos = { temp_cnic: user_cnic };
 
     axios
       .post("http://localhost:3001/ViewRequests", manhoos)
@@ -51,17 +51,17 @@ export default function ViewRequests() {
         set_brl(response.data);
       });
   };
-  
+
   const AccceptRequest = (e) => {
     var parent = e.target.parentNode;
     let reciever_cnic = parent.className;
 
-    const details = {r_cnic: reciever_cnic, d_cnic: user_cnic};
-    
+    const details = { r_cnic: reciever_cnic, d_cnic: user_cnic };
+
     axios
       .post("http://localhost:3001/AcceptRequest", details)
       .then((response) => {
-        alert(response.data)
+        alert(response.data);
       });
   };
 
@@ -69,12 +69,12 @@ export default function ViewRequests() {
     var parent = e.target.parentNode;
     let reciever_cnic = parent.className;
 
-    const details = {r_cnic: reciever_cnic, d_cnic: user_cnic};
-    
+    const details = { r_cnic: reciever_cnic, d_cnic: user_cnic };
+
     axios
       .post("http://localhost:3001/RejectRequest", details)
       .then((response) => {
-        alert(response.data)
+        alert(response.data);
       });
   };
 
@@ -82,7 +82,7 @@ export default function ViewRequests() {
     <div>
       <nav className="navbar navbar-expand-lg bg-light">
         <div className="container-fluid">
-          <a className="navbar-brand" href="#">
+          <a className="navbar-brand" href="/userDash">
             Blood Hub
           </a>
           <button
@@ -141,14 +141,28 @@ export default function ViewRequests() {
                 </ul>
               </li>
               <li className="nav-item dropdown">
-                                <a className="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                    Donor's dropdown
-                                </a>
-                                <ul className="dropdown-menu">
-                                    <li><a className="dropdown-item" href="/ViewRequests">View Requests</a></li>
-                                    <li><a className="dropdown-item" href="/ViewDonationHistory">View Donation History</a></li>
-                                </ul>
-                            </li>
+                <a
+                  className="nav-link dropdown-toggle"
+                  href="#"
+                  role="button"
+                  data-bs-toggle="dropdown"
+                  aria-expanded="false"
+                >
+                  Donor's dropdown
+                </a>
+                <ul className="dropdown-menu">
+                  <li>
+                    <a className="dropdown-item" href="/ViewRequests">
+                      View Requests
+                    </a>
+                  </li>
+                  <li>
+                    <a className="dropdown-item" href="/ViewDonationHistory">
+                      View Donation History
+                    </a>
+                  </li>
+                </ul>
+              </li>
               <li className="nav-item dropdown">
                 <a
                   className="nav-link dropdown-toggle"
@@ -213,7 +227,9 @@ export default function ViewRequests() {
               {blood_req_list.map((row) => (
                 <tr value={row.CNIC}>
                   <td>{row.date}</td>
-                  <td>{row.First_Name} {row.Middle_Name} {row.Last_Name}</td>
+                  <td>
+                    {row.First_Name} {row.Middle_Name} {row.Last_Name}
+                  </td>
                   <td>{row.City}</td>
                   <td className="donor_cnic">{row.CNIC}</td>
                   <td>{row.Phone_Number}</td>
@@ -221,7 +237,7 @@ export default function ViewRequests() {
                     <button
                       className="btn btn-primary"
                       value={row.CNIC}
-                      onClick = {AccceptRequest}
+                      onClick={AccceptRequest}
                     >
                       Accept
                     </button>
@@ -230,7 +246,7 @@ export default function ViewRequests() {
                     <button
                       className="btn btn-primary"
                       value={row.CNIC}
-                      onClick = {RejectRequest}
+                      onClick={RejectRequest}
                     >
                       Reject
                     </button>

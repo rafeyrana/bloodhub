@@ -118,7 +118,7 @@ export default function RequestBlood() {
     <div>
       <nav className="navbar navbar-expand-lg bg-light">
         <div className="container-fluid">
-          <a className="navbar-brand" href="#">
+          <a className="navbar-brand" href="/userDash">
             Blood Hub
           </a>
           <button

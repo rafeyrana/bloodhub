@@ -40,10 +40,10 @@ let session_var = null;
 // session info will be maintained in this
 
 const connection = mysql.createConnection({
-  password: "password",
+  password: "NewPassword",
   host: "localhost",
   user: "root",
-  database: "test",
+  database: "tester",
 });
 
 connection.connect((err) => {
@@ -267,7 +267,7 @@ app.get("/checkIfAdminLoggedIn", (req, res) => {
   console.log("checking admin here");
 
   // console.log("ses",session_var)
-  console.log("req", req.session.user);
+  // console.log("req", req.session.user);
   if (req.session.user != null) {
     if (req.session.user.Admin == 1) {
       res.send({ loggedIn: true, admin_data: req.session.user });
@@ -312,7 +312,7 @@ app.post("/requestBloodList", (req, res) => {
   }
 
   connection.query(
-    `select * from users join medical_records on users.CNIC = medical_records.CNIC where users.city = "${city}" and medical_records.age BETWEEN ${l_age} AND ${u_age} and users.cnic != "${user_cnic}" and users.Approved = 1 and  medical_records.last_donated < DATE_SUB(CURDATE(), INTERVAL 56 DAY);`,
+    `select * from users join medical_records on users.CNIC = medical_records.CNIC where users.city = "${city}" and medical_records.age BETWEEN ${l_age} AND ${u_age} and users.cnic != "${user_cnic}" and users.Approved = 1 and  medical_records.last_donated < DATE_SUB(CURDATE(), INTERVAL 56 DAY) AND medical_records.blood_group = ${b_group};`,
     (err, result) => {
       if (err) {
         console.log(err);
@@ -349,7 +349,7 @@ app.post("/ViewRequests", async (req, res) => {
 
 app.post("/AcceptRequest", async (req, res) => {
   console.log("fetching list");
-  const { r_cnic, d_cnic} = req.body;
+  const { r_cnic, d_cnic } = req.body;
   connection.query(
     `UPDATE Blood_Requests SET Pending_Accepted = 1 WHERE Receiver_CNIC = '${r_cnic}' and Donor_CNIC = '${d_cnic}';`,
 
@@ -357,7 +357,7 @@ app.post("/AcceptRequest", async (req, res) => {
       if (err) {
         console.log(err);
       } else {
-        res.json('Accepted');
+        res.json("Accepted");
       }
     }
   );
@@ -365,7 +365,7 @@ app.post("/AcceptRequest", async (req, res) => {
 
 app.post("/RejectRequest", async (req, res) => {
   console.log("fetching list");
-  const { r_cnic, d_cnic} = req.body;
+  const { r_cnic, d_cnic } = req.body;
   connection.query(
     `UPDATE Blood_Requests SET Pending_Accepted = 3 WHERE Receiver_CNIC = '${r_cnic}' and Donor_CNIC = '${d_cnic}';`,
 
@@ -373,7 +373,7 @@ app.post("/RejectRequest", async (req, res) => {
       if (err) {
         console.log(err);
       } else {
-        res.json('Rejected');
+        res.json("Rejected");
       }
     }
   );
@@ -419,7 +419,7 @@ app.post("/PendingRequests", async (req, res) => {
 
 app.post("/UnsendRequest", async (req, res) => {
   console.log("fetching list");
-  const { r_cnic, d_cnic} = req.body;
+  const { r_cnic, d_cnic } = req.body;
   connection.query(
     `UPDATE Blood_Requests SET Pending_Accepted = 3 WHERE Receiver_CNIC = '${r_cnic}' and Donor_CNIC = '${d_cnic}';`,
 
@@ -429,14 +429,14 @@ app.post("/UnsendRequest", async (req, res) => {
       } else {
         connection.query(
           `update users set Receiver_Request_Counter = Receiver_Request_Counter - 1 WHERE CNIC = '${r_cnic}';`,
-      
+
           (err) => {
             if (err) {
               console.log(err);
             }
           }
         );
-        res.json('Unsent');
+        res.json("Unsent");
       }
     }
   );
@@ -466,36 +466,24 @@ app.post("/ReceivedDonations", async (req, res) => {
 //admin page
 // fetching not approved users
 app.get("/getNotAprrovedList", async (req, res) => {
-  const user_query =
-    "select * from users as u join medical_records as mr on u.CNIC = mr.CNIC where u.Admin=0 and u.Approved=0;";
-  connection.query(user_query, async (err, result) => {
-    // console.log(output)
-    if (err) {
-      console.log(err);
-    } else {
-      const promises = result.map((entry) => {
-        console.log(entry);
-        connection.query(
-          `select user_condition from medical_conditions where CNIC = "${entry.CNIC}";`,
-          (err, conditions) => {
-            // console.log("hehe",result[i].CNIC)
-            // console.log(conditions)
-
-            let conditions_list = [];
-            for (j in conditions) {
-              conditions_list.push(conditions[j].user_condition);
-            }
-            // console.log(conditions_list)
-            entry["user_conditions"] = conditions_list;
-            console.log("inside_loop");
-          }
-        );
-      });
-
-      await Promise.all(promises);
-      console.log("outside_loop");
-    }
-  });
+  const query = util.promisify(connection.query).bind(connection);
+  const res1 = await query(
+    "select * from users as u join medical_records as mr on u.CNIC = mr.CNIC where u.Admin=0 and u.Approved=0;"
+  );
+  await Promise.all(
+    res1.map(async (entry) => {
+      conditions = await query(
+        `select user_condition from medical_conditions where CNIC = "${entry.CNIC}";`
+      );
+      let conditions_list = [];
+      for (j in conditions) {
+        conditions_list.push(conditions[j].user_condition);
+      }
+      entry["user_conditions"] = conditions_list;
+    })
+  );
+  console.log(res1);
+  res.json(res1);
 });
 
 app.post("/postRequest", async (req, res) => {
@@ -516,6 +504,13 @@ app.post("/postRequest", async (req, res) => {
     res.json("Request Sent");
   }
   return;
+});
+
+app.post("/approveUser", async (req, res) => {
+  const { u_cnic } = req.body;
+  const query = util.promisify(connection.query).bind(connection);
+  await query(`update users set Approved = 1 where cnic = '${u_cnic}';`);
+  res.json("Approved");
 });
 
 app.listen(3001, () => {

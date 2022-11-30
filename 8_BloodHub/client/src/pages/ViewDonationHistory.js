@@ -43,7 +43,7 @@ export default function ViewDonationHistory() {
   }, [page_loaded]);
 
   const requestFormSubmit = () => {
-    const manhoos = {temp_cnic: user_cnic};
+    const manhoos = { temp_cnic: user_cnic };
 
     axios
       .post("http://localhost:3001/ViewDonationHistory", manhoos)
@@ -56,7 +56,7 @@ export default function ViewDonationHistory() {
     <div>
       <nav className="navbar navbar-expand-lg bg-light">
         <div className="container-fluid">
-          <a className="navbar-brand" href="#">
+          <a className="navbar-brand" href="/userDash">
             Blood Hub
           </a>
           <button
@@ -115,14 +115,28 @@ export default function ViewDonationHistory() {
                 </ul>
               </li>
               <li className="nav-item dropdown">
-                                <a className="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                    Donor's dropdown
-                                </a>
-                                <ul className="dropdown-menu">
-                                    <li><a className="dropdown-item" href="/ViewRequests">View Requests</a></li>
-                                    <li><a className="dropdown-item" href="/ViewDonationHistory">View Donation History</a></li>
-                                </ul>
-                            </li>
+                <a
+                  className="nav-link dropdown-toggle"
+                  href="#"
+                  role="button"
+                  data-bs-toggle="dropdown"
+                  aria-expanded="false"
+                >
+                  Donor's dropdown
+                </a>
+                <ul className="dropdown-menu">
+                  <li>
+                    <a className="dropdown-item" href="/ViewRequests">
+                      View Requests
+                    </a>
+                  </li>
+                  <li>
+                    <a className="dropdown-item" href="/ViewDonationHistory">
+                      View Donation History
+                    </a>
+                  </li>
+                </ul>
+              </li>
               <li className="nav-item dropdown">
                 <a
                   className="nav-link dropdown-toggle"
@@ -166,8 +180,8 @@ export default function ViewDonationHistory() {
         </div>
       </nav>
       <div>
-        View Donatiion History page, current user: {user_data["First_Name"]} with cnic:{" "}
-        {user_data["CNIC"]}
+        View Donatiion History page, current user: {user_data["First_Name"]}{" "}
+        with cnic: {user_data["CNIC"]}
       </div>
 
       <div className="ViewRequestbox">
@@ -187,7 +201,9 @@ export default function ViewDonationHistory() {
               {blood_req_list.map((row) => (
                 <tr value={row.CNIC}>
                   <td>{row.date}</td>
-                  <td>{row.First_Name} {row.Middle_Name} {row.Last_Name}</td>
+                  <td>
+                    {row.First_Name} {row.Middle_Name} {row.Last_Name}
+                  </td>
                   <td>{row.City}</td>
                   <td className="donor_cnic">{row.CNIC}</td>
                   <td>{row.Phone_Number}</td>
