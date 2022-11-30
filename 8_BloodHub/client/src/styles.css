@@ -1,0 +1,29 @@
+.sign-in{
+    width: 50%;
+    margin: auto;
+    margin-top: 50px;
+  }
+  .sign-up{
+    width: 40%;
+    margin: auto;
+    margin-top: 50px;
+  }
+  .signup_toggle{
+    color:white !important;
+    margin-top: 50px;
+    
+  }
+
+
+
+  .requestBloodbox{
+    /* background-color: red; */
+    display: flex;
+  }
+
+  .requestBloodForm{
+    border-right: 1px black solid;
+    
+    width: 350px;
+    padding: 20px 20px;
+  }
