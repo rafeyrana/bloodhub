@@ -312,7 +312,7 @@ app.post("/requestBloodList", (req, res) => {
   }
 
   connection.query(
-    `select * from users join medical_records on users.CNIC = medical_records.CNIC where users.city = "${city}" and medical_records.age BETWEEN ${l_age} AND ${u_age} and users.cnic != "${user_cnic}" and users.Approved = 1 and  medical_records.last_donated < DATE_SUB(CURDATE(), INTERVAL 56 DAY) AND medical_records.blood_group = ${b_group};`,
+    `select * from users join medical_records on users.CNIC = medical_records.CNIC where users.city = "${city}" and medical_records.age BETWEEN ${l_age} AND ${u_age} and users.cnic != "${user_cnic}" and users.Approved = 1 and  medical_records.last_donated < DATE_SUB(CURDATE(), INTERVAL 56 DAY) AND medical_records.blood_group = '${b_group}';`,
     (err, result) => {
       if (err) {
         console.log(err);
