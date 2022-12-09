@@ -53,7 +53,6 @@ export default function AdminDash() {
   }, []);
 
   const fetchNotAprroved = () => {
-    console.log("gonna fetch not approved users here");
     axios.get("http://localhost:3001/getNotAprrovedList").then((response) => {
       set_not_approved_list(response.data);
       console.log(response.data);
@@ -63,7 +62,6 @@ export default function AdminDash() {
   const approveUserFunc = (e) => {
     var parent = e.target.parentNode;
     let approve_cnic = parent.className;
-    // console.log(approve_cnic)
     const details = { u_cnic: approve_cnic };
     axios
       .post("http://localhost:3001/approveUser", details)

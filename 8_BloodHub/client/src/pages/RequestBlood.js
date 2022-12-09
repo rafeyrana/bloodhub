@@ -61,12 +61,6 @@ export default function RequestBlood() {
   const [age_err, set_age_err] = useState("");
 
   const requestFormSubmit = () => {
-    // console.log("clicked")
-    console.log(city);
-    console.log(b_group);
-    console.log(l_age);
-    console.log(u_age);
-    console.log(user_cnic);
     if (parseInt(l_age) < 0 || parseInt(u_age) < 0) {
       set_age_err("please enter a number greater than 0");
       return;
@@ -124,13 +118,8 @@ export default function RequestBlood() {
   // will write it later :)
   const requestBloodFromUser = (e) => {
     var parent = e.target.parentNode;
-    // var get_donor_cnic = .querySelector('.donor_cnic');
-    // console.log(get_donor_cnic)
-    // console.log(e)
     let requested_donor_cnic = parent.className;
-    // console.log(requested_donor_cnic);
     console.log(user_data["CNIC"]);
-    // console.log("need to implement this :)");
     const details = { r_cnic: user_data["CNIC"], d_cnic: requested_donor_cnic };
     axios
       .post("http://localhost:3001/postRequest", details)
@@ -169,11 +158,6 @@ export default function RequestBlood() {
                   User Dashboard
                 </a>
               </li>
-              <li className="nav-item">
-                <a className="nav-link" href="#">
-                  copy_this_div_for_links
-                </a>
-              </li>
               <li className="nav-item dropdown">
                 <a
                   className="nav-link dropdown-toggle"
@@ -210,11 +194,34 @@ export default function RequestBlood() {
                   data-bs-toggle="dropdown"
                   aria-expanded="false"
                 >
+                  Donor's dropdown
+                </a>
+                <ul className="dropdown-menu">
+                  <li>
+                    <a className="dropdown-item" href="/ViewRequests">
+                      View Requests
+                    </a>
+                  </li>
+                  <li>
+                    <a className="dropdown-item" href="/ViewDonationHistory">
+                      View Donation History
+                    </a>
+                  </li>
+                </ul>
+              </li>
+              <li className="nav-item dropdown">
+                <a
+                  className="nav-link dropdown-toggle"
+                  href="#"
+                  role="button"
+                  data-bs-toggle="dropdown"
+                  aria-expanded="false"
+                >
                   settings
                 </a>
                 <ul className="dropdown-menu">
                   <li>
-                    <a className="dropdown-item" href="#">
+                    <a className="dropdown-item" href="/UpdateInfo">
                       Update Profile
                     </a>
                   </li>

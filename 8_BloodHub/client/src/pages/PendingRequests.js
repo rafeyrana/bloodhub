@@ -62,6 +62,7 @@ export default function PendingRequests() {
       .post("http://localhost:3001/UnsendRequest", details)
       .then((response) => {
         alert(response.data);
+        requestFormSubmit();
       });
   };
 
@@ -92,11 +93,6 @@ export default function PendingRequests() {
                   href="/userDash"
                 >
                   User Dashboard
-                </a>
-              </li>
-              <li className="nav-item">
-                <a className="nav-link" href="#">
-                  copy_this_div_for_links
                 </a>
               </li>
               <li className="nav-item dropdown">
@@ -162,7 +158,7 @@ export default function PendingRequests() {
                 </a>
                 <ul className="dropdown-menu">
                   <li>
-                    <a className="dropdown-item" href="#">
+                    <a className="dropdown-item" href="/UpdateInfo">
                       Update Profile
                     </a>
                   </li>

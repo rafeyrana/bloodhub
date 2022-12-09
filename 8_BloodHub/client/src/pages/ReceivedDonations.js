@@ -81,11 +81,6 @@ export default function ReceivedDonations() {
                   User Dashboard
                 </a>
               </li>
-              <li className="nav-item">
-                <a className="nav-link" href="#">
-                  copy_this_div_for_links
-                </a>
-              </li>
               <li className="nav-item dropdown">
                 <a
                   className="nav-link dropdown-toggle"
@@ -149,7 +144,7 @@ export default function ReceivedDonations() {
                 </a>
                 <ul className="dropdown-menu">
                   <li>
-                    <a className="dropdown-item" href="#">
+                    <a className="dropdown-item" href="/UpdateInfo">
                       Update Profile
                     </a>
                   </li>
