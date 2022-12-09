@@ -3,7 +3,6 @@ import "./App.css";
 import "./styles.css";
 import { BrowserRouter as Router, Route, Routes, Link } from "react-router-dom";
 
-
 import Home from "./pages/Home";
 import SignUp from "./pages/SignUp";
 import UserDash from "./pages/UserDash";
@@ -13,8 +12,7 @@ import RequestBlood from "./pages/RequestBlood";
 import AdminDash from "./pages/AdminDash";
 import ViewRequests from "./pages/ViewRequests";
 import ViewDonationHistory from "./pages/ViewDonationHistory";
-
-
+import UpdateInfo from "./pages/UpdateInfo";
 
 function App() {
   return (
@@ -25,12 +23,16 @@ function App() {
           <Route path="/signup" element={<SignUp />} />
           <Route path="/userDash" element={<UserDash />} />
           <Route path="/PendingRequests" element={<PendingRequests />} />
-          <Route path="/ReceivedDonations" element={< ReceivedDonations/>} />
+          <Route path="/ReceivedDonations" element={<ReceivedDonations />} />
           <Route path="/RequestBlood" element={<RequestBlood />} />
-          <Route path="/AdminDash" element={<AdminDash  />} />
-          <Route path="/ViewRequests" element={<ViewRequests  />} />
-          <Route path="/ViewDonationHistory" element={<ViewDonationHistory  />} />
-          
+          <Route path="/AdminDash" element={<AdminDash />} />
+          <Route path="/ViewRequests" element={<ViewRequests />} />
+          <Route path="/UpdateInfo" element={<UpdateInfo />} />
+          <Route
+            path="/ViewDonationHistory"
+            element={<ViewDonationHistory />}
+          />
+
           {/* <Route path="/user" element={<UserDash />} /> */}
         </Routes>
       </Router>

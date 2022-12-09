@@ -18,6 +18,8 @@ export default function RequestBlood() {
   const [blood_req_list, set_brl] = useState([]);
   const [page_loaded, set_page_loaded] = useState(false); //dont change its value in the code!
 
+  const [broadcast_message, set_broadcast_message] = useState("");
+
   useEffect(() => {
     //use this for authentication
     axios.get("http://localhost:3001/checkIfLoggedIn").then((response) => {
@@ -31,6 +33,7 @@ export default function RequestBlood() {
         set_city(response.data.user_data["City"]);
         set_b_group(response.data.user_data["Blood_Group"]);
         set_cnic(response.data.user_data["CNIC"]);
+        set_broadcast_bgroup(response.data.user_data["Blood_Group"]); //////////////////////////////
         set_page_loaded(true);
       }
     });
@@ -89,6 +92,29 @@ export default function RequestBlood() {
       .then((response) => {
         console.log(response.data[0]);
         set_brl(response.data);
+      });
+  };
+
+  const [broadcast_bgroup, set_broadcast_bgroup] = useState("");
+  const [empty_message, set_empty_message] = useState("");
+  const broadcast_message_submit = () => {
+    console.log(broadcast_message);
+    console.log(broadcast_bgroup);
+    if (broadcast_message == "") {
+      set_empty_message("please enter message");
+      console.log(empty_message);
+      return;
+    }
+
+    set_empty_message("");
+    axios
+      .post("http://localhost:3001/postBroadcast", {
+        u_cnic: user_cnic,
+        b_grp: broadcast_bgroup,
+        b_msg: broadcast_message,
+      })
+      .then((response) => {
+        alert(response.data.msg);
       });
   };
 
@@ -341,6 +367,52 @@ export default function RequestBlood() {
               ))}
             </tbody>
           </table>
+        </div>
+      </div>
+      <div className="postBroadcastMessage">
+        <h3>Broadcast message</h3>
+        <div className="mb-3">
+          <label>Enter Message:</label>
+          <input
+            type="text"
+            className="form-control"
+            placeholder="Enter message"
+            name="broadcast_message"
+            onChange={(e) => {
+              set_broadcast_message(e.target.value);
+            }}
+          />
+        </div>
+        <div className="mb-3 input-box">
+          <label>Blood Group</label>
+          <div className="select-container">
+            <select
+              value={broadcast_bgroup}
+              onChange={(e) => {
+                set_broadcast_bgroup(e.target.value);
+              }}
+            >
+              {blood_list.map((c) => {
+                if (c.Blood_Group == broadcast_bgroup) {
+                  // console.log(c.City)
+                  return (
+                    <option value={c.Blood_Group} selected>
+                      {c.Blood_Group}
+                    </option>
+                  );
+                }
+                //   console.log(city)
+                return <option value={c.Blood_Group}>{c.Blood_Group}</option>;
+              })}
+            </select>
+          </div>
+          <div className="form-text">{empty_message}</div>
+          <button
+            className="btn btn-primary"
+            onClick={broadcast_message_submit}
+          >
+            Post Message
+          </button>
         </div>
       </div>
     </div>

@@ -7,6 +7,8 @@ export default function UserDash() {
   let navigate = useNavigate();
 
   const [user_data, set_user_data] = useState(""); //use this for authentications
+  const [page_loaded, set_page_loaded] = useState(false);
+  const [broadcast_list, set_brl] = useState([]);
 
   useEffect(() => {
     //use this for authentication
@@ -18,9 +20,21 @@ export default function UserDash() {
         navigate("/");
       } else {
         set_user_data(response.data.user_data);
+        set_page_loaded(true);
       }
     });
   }, []);
+
+  useEffect(() => {
+    requestFormSubmit();
+  }, [page_loaded]);
+
+  const requestFormSubmit = () => {
+    axios.get("http://localhost:3001/getBroadcastList").then((response) => {
+      set_brl(response.data);
+      console.log(response);
+    });
+  };
 
   console.log("in main", user_data);
   console.log(user_data["First_Name"]); // access data in userdata like this
@@ -54,11 +68,7 @@ export default function UserDash() {
                   User Dashboard
                 </a>
               </li>
-              <li className="nav-item">
-                <a className="nav-link" href="#">
-                  copy_this_div_for_links
-                </a>
-              </li>
+
               <li className="nav-item dropdown">
                 <a
                   className="nav-link dropdown-toggle"
@@ -122,7 +132,7 @@ export default function UserDash() {
                 </a>
                 <ul className="dropdown-menu">
                   <li>
-                    <a className="dropdown-item" href="#">
+                    <a className="dropdown-item" href="/UpdateInfo">
                       Update Profile
                     </a>
                   </li>
@@ -153,7 +163,32 @@ export default function UserDash() {
         </div>
       </nav>
 
-      <div>hello {user_data["First_Name"]}</div>
+      <h2>Hello {user_data["First_Name"]}</h2>
+      <div>
+        <h3>BroadCast List</h3>
+        <div className="requestBloodList">
+          <table class="table">
+            <thead>
+              <tr>
+                <th scope="col">Message</th>
+                <th scope="col">Blood Group</th>
+                <th scope="col">City</th>
+                <th scope="col">Contact Dtails</th>
+              </tr>
+            </thead>
+            <tbody>
+              {broadcast_list.map((row) => (
+                <tr>
+                  <td>{row.Message}</td>
+                  <td>{row.Blood_Group}</td>
+                  <td>{row.City}</td>
+                  <td>{row.Phone_Number}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 }

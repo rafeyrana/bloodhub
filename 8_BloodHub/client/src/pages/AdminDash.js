@@ -10,6 +10,12 @@ export default function AdminDash() {
   const [page_loaded, set_page_loaded] = useState(false);
   const [not_approved_list, set_not_approved_list] = useState([]);
 
+  const [city_list, set_city_list] = useState([]);
+  const [blood_list, set_blood_list] = useState([]);
+  const [city, set_city] = useState("all");
+  const [b_group, set_b_group] = useState("all");
+
+  // const []
   useEffect(() => {
     //use this for authentication
     axios.get("http://localhost:3001/checkIfAdminLoggedIn").then((response) => {
@@ -28,8 +34,23 @@ export default function AdminDash() {
   useEffect(() => {
     if (admin_data["Admin"] == 1) {
       fetchNotAprroved();
+      searchFormSubmit();
     }
   }, [page_loaded]);
+
+  useEffect(() => {
+    axios.get("http://localhost:3001/get_cities").then((fetched_cities) => {
+      fetched_cities.data.push({ City: "all" });
+      console.log(fetched_cities.data);
+      set_city_list(fetched_cities.data);
+    });
+
+    axios.get("http://localhost:3001/get_blood").then((fetched_blood) => {
+      fetched_blood.data.push({ Blood_Group: "all" });
+      console.log(fetched_blood.data);
+      set_blood_list(fetched_blood.data);
+    });
+  }, []);
 
   const fetchNotAprroved = () => {
     console.log("gonna fetch not approved users here");
@@ -51,6 +72,22 @@ export default function AdminDash() {
       });
   };
 
+  const [donation_list, set_dl] = useState([]);
+
+  const searchFormSubmit = (e) => {
+    // console.log("hhhhhh");
+    console.log(city);
+    console.log(b_group);
+    axios
+      .post("http://localhost:3001/viewAdminDonationHistory", {
+        city: city,
+        b_group: b_group,
+      })
+      .then((response) => {
+        console.log(response.data[0]);
+        set_dl(response.data);
+      });
+  };
   return (
     <div>
       <nav className="navbar navbar-expand-lg bg-light">
@@ -157,6 +194,117 @@ export default function AdminDash() {
             ))}
           </tbody>
         </table>
+      </div>
+      <div>
+        <h4>Donation History</h4>
+      </div>
+      <div className="requestBloodbox">
+        <div className="requestBloodForm">
+          <div>
+            <div className="mb-3 input-box">
+              <label>City</label>
+              <div className="select-container">
+                <select
+                  value={city}
+                  onChange={(e) => {
+                    set_city(e.target.value);
+                  }}
+                >
+                  {city_list.map((c) => {
+                    if (c.City == city) {
+                      // console.log(c.City)
+                      return (
+                        <option value={c.City} selected>
+                          {c.City}
+                        </option>
+                      );
+                    }
+                    //   console.log(city)
+                    return <option value={c.City}>{c.City}</option>;
+                  })}
+                </select>
+              </div>
+            </div>
+            <div className="mb-3 input-box">
+              <label>Blood Group</label>
+              <div className="select-container">
+                <select
+                  value={b_group}
+                  onChange={(e) => {
+                    set_b_group(e.target.value);
+                  }}
+                >
+                  {blood_list.map((c) => {
+                    if (c.Blood_Group == b_group) {
+                      // console.log(c.City)
+                      return (
+                        <option value={c.Blood_Group} selected>
+                          {c.Blood_Group}
+                        </option>
+                      );
+                    }
+                    //   console.log(city)
+                    return (
+                      <option value={c.Blood_Group}>{c.Blood_Group}</option>
+                    );
+                  })}
+                </select>
+              </div>
+            </div>
+            {/* <div className="mb-3">
+                            <label>Age</label>
+                            <input
+                                type="number"
+                                className="form-control"
+                                placeholder="Enter lower limit for age"
+                                name="l_age"
+                                onChange={(e) => {
+                                    set_l_age(e.target.value);
+                                }}
+                            />
+                            <br></br>
+                            <input
+                                type="number"
+                                className="form-control"
+                                placeholder="Enter upper limit for age"
+                                name="u_age"
+                                onChange={(e) => {
+                                    set_u_age(e.target.value);
+                                }}
+                            />
+                            <div className="form-text">{age_err}</div>
+
+                        </div> */}
+            {}
+
+            <button className="btn btn-primary" onClick={searchFormSubmit}>
+              Filter
+            </button>
+          </div>
+        </div>
+        <div className="requestBloodList">
+          <table class="table">
+            <thead>
+              <tr>
+                <th scope="col">Donor CNIC</th>
+                <th scope="col">Receiver CNIC</th>
+                <th scope="col">Blood Type</th>
+                <th scope="col">CNIC</th>
+              </tr>
+            </thead>
+            <tbody>
+              {donation_list.map((row) => (
+                <tr>
+                  <td>{row.Donor_CNIC}</td>
+                  <td>{row.Receiver_CNIC}</td>
+                  <td>{row.blood_group}</td>
+                  <td>{row.city}</td>
+                  <td>{row.date}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

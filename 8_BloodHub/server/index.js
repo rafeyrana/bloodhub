@@ -513,6 +513,77 @@ app.post("/approveUser", async (req, res) => {
   res.json("Approved");
 });
 
+app.post("/postBroadcast", async (req, res) => {
+  const { u_cnic, b_grp, b_msg } = req.body;
+  const query = util.promisify(connection.query).bind(connection);
+  const count = await query(
+    `select count(*) from tester.broadcast_list where cnic = '${u_cnic}' and date(date) = current_date() and (HOUR(date) > HOUR(current_timestamp())-1);`
+  );
+  const posted = count[0]["count(*)"];
+  console.log(posted);
+  if (posted >= 5) {
+    res.json({ msg: "Broadcast Limit Reached" });
+    return;
+  } else {
+    await query(
+      `INSERT INTO broadcast_list (Message, CNIC, Blood_Group) VALUES ('${b_msg}', '${u_cnic}', '${b_grp}');`
+    );
+    res.json({ msg: "Message Broadcasted" });
+    return;
+  }
+});
+
+app.get("/getBroadcastList", async (req, res) => {
+  const query = util.promisify(connection.query).bind(connection);
+  const rows = await query(
+    `SELECT bl.Message, bl.Blood_Group, users.Phone_Number, users.City FROM broadcast_list as bl join users on bl.CNIC = users.CNIC order by date;`
+  );
+  console.log("HERE");
+  res.json(rows);
+});
+
+app.post("/viewAdminDonationHistory", async (req, res) => {
+  const { city, b_group } = req.body;
+  let qry1 = `select  br.Donor_CNIC, br.Receiver_CNIC, mr.blood_group, br.date, users.city from blood_requests as br join medical_records as mr on br.Donor_CNIC = mr.CNIC join users on br.Receiver_CNIC = users.CNIC WHERE Pending_Accepted = 1 `;
+  if (city != "all") {
+    qry1 += `AND city = '${city}' `;
+  }
+  if (b_group != "all") {
+    qry1 += `AND Blood_Group = '${b_group}' `;
+  }
+  qry1 += " order by br.date";
+  qry1 += `;`;
+  const query = util.promisify(connection.query).bind(connection);
+  const rows = await query(qry1);
+  res.json(rows);
+});
+
+app.post("/updateInfo", async (req, res) => {
+  const { fname, mname, lname, password, pnum, age, weight, height, u_cnic } =
+    req.body;
+  const query = util.promisify(connection.query).bind(connection);
+  if (password == "") {
+    let user_query = `UPDATE users SET First_Name = '${fname}', Middle_Name = '${mname}', Last_Name = '${lname}', Phone_Number = '${pnum}' WHERE CNIC = '${u_cnic}';`;
+    user_query = user_query.replace(/''/g, "NULL");
+    console.log(user_query);
+    await query(user_query);
+    let med_query = `UPDATE medical_records SET Age = '${age}', Weight = '${weight}', Height = '${height}' WHERE CNIC = '${u_cnic}';`;
+    await query(med_query);
+  } else {
+    bcrypt.hash(password, 10, async (err, hashed_pass) => {
+      if (err) console.log(err);
+      else {
+        let user_query = `UPDATE users SET First_Name = '${fname}', Middle_Name = '${mname}', Last_Name = '${lname}', Phone_Number = '${pnum}', Password = '${hashed_pass}' WHERE CNIC = '${u_cnic}';`;
+        user_query = user_query.replace(/''/g, "NULL");
+        await query(user_query);
+        let med_query = `UPDATE medical_records SET Age = '${age}', Weight = '${weight}', Height = '${height}' WHERE CNIC = '${u_cnic}';`;
+        await query(med_query);
+        res.json({ msg: "Updated Personal Info" });
+      }
+    });
+  }
+});
+
 app.listen(3001, () => {
   console.log("Server running on port 3001");
 });
