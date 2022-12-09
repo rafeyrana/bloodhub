@@ -274,7 +274,7 @@ app.post("/ViewRequests", async (req, res) => {
 app.post("/AcceptRequest", async (req, res) => {
   const { r_cnic, d_cnic } = req.body;
   connection.query(
-    `UPDATE Blood_Requests SET Pending_Accepted = 1 WHERE Receiver_CNIC = '${r_cnic}' and Donor_CNIC = '${d_cnic}';`,
+    `UPDATE Blood_Requests SET Pending_Accepted = 1 WHERE Receiver_CNIC = '${r_cnic}' and Donor_CNIC = '${d_cnic}' AND Pending_Accepted = 0;`,
     (err) => {
       if (err) {
         console.log(err);
@@ -288,7 +288,7 @@ app.post("/AcceptRequest", async (req, res) => {
 app.post("/RejectRequest", async (req, res) => {
   const { r_cnic, d_cnic } = req.body;
   connection.query(
-    `UPDATE Blood_Requests SET Pending_Accepted = 3 WHERE Receiver_CNIC = '${r_cnic}' and Donor_CNIC = '${d_cnic}';`,
+    `UPDATE Blood_Requests SET Pending_Accepted = 3 WHERE Receiver_CNIC = '${r_cnic}' and Donor_CNIC = '${d_cnic}' AND Pending_Accepted = 0;`,
 
     (err) => {
       if (err) {
@@ -322,7 +322,6 @@ app.post("/PendingRequests", async (req, res) => {
       if (err) {
         console.log(err);
       } else {
-        console.log(result);
         res.send(result);
       }
     }
@@ -332,7 +331,7 @@ app.post("/PendingRequests", async (req, res) => {
 app.post("/UnsendRequest", async (req, res) => {
   const { r_cnic, d_cnic } = req.body;
   connection.query(
-    `UPDATE Blood_Requests SET Pending_Accepted = 3 WHERE Receiver_CNIC = '${r_cnic}' and Donor_CNIC = '${d_cnic}';`,
+    `UPDATE Blood_Requests SET Pending_Accepted = 3 WHERE Receiver_CNIC = '${r_cnic}' and Donor_CNIC = '${d_cnic}' AND Pending_Accepted = 0;`,
     (err) => {
       if (err) {
         console.log(err);
@@ -476,6 +475,7 @@ app.post("/updateInfo", async (req, res) => {
     await query(user_query);
     let med_query = `UPDATE medical_records SET Age = '${age}', Weight = '${weight}', Height = '${height}' WHERE CNIC = '${u_cnic}';`;
     await query(med_query);
+    res.json({ msg: "Updated Personal Info" });
   } else {
     bcrypt.hash(password, 10, async (err, hashed_pass) => {
       if (err) console.log(err);

@@ -96,27 +96,6 @@ export default function SignUp() {
     } else {
       set_missing_err("Enter all required fields");
     }
-    // axios.post("http://localhost:3001/signup", {
-    //     fname: first_name,
-    //     mname: middle_name,
-    //     lname: last_name,
-    //     email: email,
-    //     cnic: cnic,
-    //     password: password,
-    //     pnum: phone_num,
-    //     city: city,
-    //     bgrp: blood_type,
-    //     age: age,
-    //     weight: weight,
-    //     height: height,
-    //     cond1: medical_condition1,
-    //     cond2: medical_condition2,
-    //     cond3: medical_condition3
-
-    // }).then(() => {
-    //     alert("submitted")
-    // });
-    // // e.preventDefault()
   };
 
   return (

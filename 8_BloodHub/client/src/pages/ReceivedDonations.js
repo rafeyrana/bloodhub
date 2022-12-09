@@ -184,7 +184,7 @@ export default function ReceivedDonations() {
           <table class="table">
             <thead>
               <tr>
-                <th scope="col">Time</th>
+                <th scope="col">Date Time</th>
                 <th scope="col">Name</th>
                 <th scope="col">City</th>
                 <th scope="col">CNIC</th>
