@@ -125,46 +125,43 @@ app.post("/signup", async (req, res) => {
 
 
 
-
 app.post("/login", async (req, res) => {
-  let { user_email, user_password } = req.body;
-  connection.query(
-    `select * from users join medical_records on users.CNIC = medical_records.CNIC WHERE users.email = '${user_email}'`,
-    (err, result) => {
-      if (err) {
-        console.log(err);
-      } else {
-        if (result.length == 0) {
-          console.log("no such user exists");
-          res.send({ error: "no such user exists" });
-        } else {
-          bcrypt.compare(
-            user_password,
-            result[0].Password,
-            async (err, comparison_result) => {
-              if (err) {
-                console.log(err);
-              } else {
-                if (comparison_result) {
-                  if (result[0].Approved == 1) {
-                    req.session.user = result[0];
-                    res.send({ success: "login successful" });
-                  } else {
-                    console.log("account not approved");
-                    res.send({ error: "account not approved" });
-                  }
-                } else {
-                  console.log("incorrect password");
-                  res.send({ error: "incorrect password" });
-                }
-              }
-            }
-          );
-        }
-      }
+  const { user_email, user_password } = req.body;
+
+  try {
+    const query = `
+      SELECT users.*, medical_records.*
+      FROM users
+      JOIN medical_records ON users.CNIC = medical_records.CNIC
+      WHERE users.email = ?
+    `;
+    const [results] = await connection.promise().query(query, [user_email]);
+
+    if (results.length === 0) {
+      return res.status(404).json({ error: "No such user exists" });
     }
-  );
+
+    const user = results[0];
+    const passwordMatch = await bcrypt.compare(user_password, user.Password);
+
+    if (!passwordMatch) {
+      return res.status(401).json({ error: "Incorrect password" });
+    }
+
+    if (user.Approved !== 1) {
+      return res.status(403).json({ error: "Account not approved" });
+    }
+
+    req.session.user = user;
+    res.status(200).json({ success: "Login successful" });
+  } catch (error) {
+    console.error("Login error:", error);
+    res.status(500).json({ error: "An error occurred during login" });
+  }
 });
+
+
+
 
 app.post("/loginAdmin", async (req, res) => {
   let { user_email, user_password } = req.body;
