@@ -1,44 +1,32 @@
 const express = require("express");
-const app = express();
 const cors = require("cors");
 const mysql = require("mysql");
 const bcrypt = require("bcrypt");
-const e = require("express");
 const util = require("util");
-
-// authentication
 const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
 const session = require("express-session");
 
-app.use(express.json());
+const app = express();
 
-app.use(
-  cors({
-    origin: ["http://localhost:3000"], // give url for frontend here
-    methods: ["GET", "POST"],
-    credentials: true,
-  })
-);
+// Middleware
+app.use(express.json());
+app.use(cors({
+  origin: ["http://localhost:3000"],
+  methods: ["GET", "POST"],
+  credentials: true,
+}));
 app.use(cookieParser());
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(session({
+  key: "userCookie",
+  secret: "secret",
+  resave: false,
+  saveUninitialized: false,
+  cookie: { expires: 1000 * 60 * 60 * 2 },
+}));
 
-// initialising session
-app.use(
-  session({
-    key: "userCookie",
-    secret: "secret",
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      expires: 1000 * 60 * 60 * 2,
-    },
-  })
-);
-
-let session_var = null;
-// session info will be maintained in this
-
+// Database connection
 const connection = mysql.createConnection({
   password: "NewPassword",
   host: "localhost",
@@ -48,14 +36,16 @@ const connection = mysql.createConnection({
 
 connection.connect((err) => {
   if (err) throw err;
-  else console.log("Connected to MySQL successfully.");
+  console.log("Connected to MySQL successfully.");
 });
 
+// Promisify MySQL queries
+const query = util.promisify(connection.query).bind(connection);
+
+// Routes
 app.get("/get_cities", async (req, res) => {
-  const cities_querry = "select * from cities;";
-  connection.query(cities_querry, (err, output) => {
-    res.send(output);
-  });
+  const cities = await query("SELECT * FROM cities;");
+  res.send(cities);
 });
 
 app.get("/get_blood", async (req, res) => {
@@ -66,7 +56,7 @@ app.get("/get_blood", async (req, res) => {
 });
 
 app.post("/signup", async (req, res) => {
-  let {
+  const {
     fname,
     mname,
     lname,
@@ -84,53 +74,57 @@ app.post("/signup", async (req, res) => {
     cond3,
   } = req.body;
 
-  conditions = [cond1, cond2, cond3];
+  const conditions = [cond1, cond2, cond3].filter(Boolean);
 
-  bcrypt.hash(password, 10, (err, hashed_password) => {
-    if (err) console.log(err);
-    else {
-      connection.query(
-        `SELECT count(*) as count from users where cnic = "${cnic}" or email = "${email}"`,
-        (err, res) => {
-          if (err) {
-            console.log(err);
-          } else {
-            if (res[0].count == 0) {
-              let user_query = `INSERT INTO users (CNIC,Email ,Password ,Phone_Number ,First_Name ,Middle_Name ,Last_Name ,Approved ,Receiver_Request_Counter ,Admin,City)
-              values("${cnic}","${email}","${hashed_password}","${pnum}","${fname}","${mname}","${lname}",0,0,0,"${city}");`;
-              user_query = user_query.replace(/""/g, "NULL");
-              connection.query(user_query, (err, result) => {
-                if (err) {
-                  connection.query(`DELETE FROM users where CNIC = "${cnic}"`);
-                } else {
-                  connection.query(
-                    `INSERT INTO medical_records (Age, Weight, Height, CNIC, Blood_Group) values(${age},${weight},${height},"${cnic}","${bgrp}");`,
-                    (err, result) => {
-                      if (err) console.log(err);
-                      else {
-                        for (c in conditions) {
-                          if (conditions[c].length === 0) continue;
-                          connection.query(
-                            `INSERT INTO medical_conditions (user_condition, CNIC) values("${conditions[c]}","${cnic}")`,
-                            (err, mc_result) => {
-                              if (err) console.log("error in mc");
-                            }
-                          );
-                        }
-                      }
-                    }
-                  );
-                }
-              });
-            } else {
-              console.log("a user with these credentials already exists");
-            }
-          }
-        }
-      );
+  try {
+    const existingUser = await query(
+      "SELECT COUNT(*) as count FROM users WHERE cnic = ? OR email = ?",
+      [cnic, email]
+    );
+
+    if (existingUser[0].count > 0) {
+      return res.status(409).json({ error: "User with these credentials already exists" });
     }
-  });
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    await query("START TRANSACTION");
+
+    const userQuery = `
+      INSERT INTO users 
+      (CNIC, Email, Password, Phone_Number, First_Name, Middle_Name, Last_Name, Approved, Receiver_Request_Counter, Admin, City)
+      VALUES (?, ?, ?, ?, ?, ?, ?, 0, 0, 0, ?)
+    `;
+    await query(userQuery, [cnic, email, hashedPassword, pnum, fname, mname || null, lname, city]);
+
+    const medicalRecordQuery = `
+      INSERT INTO medical_records 
+      (Age, Weight, Height, CNIC, Blood_Group) 
+      VALUES (?, ?, ?, ?, ?)
+    `;
+    await query(medicalRecordQuery, [age, weight, height, cnic, bgrp]);
+
+    if (conditions.length > 0) {
+      const medicalConditionQuery = `
+        INSERT INTO medical_conditions 
+        (user_condition, CNIC) 
+        VALUES ?
+      `;
+      const conditionValues = conditions.map(condition => [condition, cnic]);
+      await query(medicalConditionQuery, [conditionValues]);
+    }
+
+    await query("COMMIT");
+    res.status(201).json({ message: "User registered successfully" });
+  } catch (error) {
+    await query("ROLLBACK");
+    console.error("Error in signup:", error);
+    res.status(500).json({ error: "An error occurred during signup" });
+  }
 });
+
+
+
 
 app.post("/login", async (req, res) => {
   let { user_email, user_password } = req.body;
