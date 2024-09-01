@@ -307,32 +307,56 @@ app.post("/AcceptRequest", async (req, res) => {
 });
 
 app.post("/RejectRequest", async (req, res) => {
-  const { r_cnic, d_cnic } = req.body;
-  connection.query(
-    `UPDATE Blood_Requests SET Pending_Accepted = 3 WHERE Receiver_CNIC = '${r_cnic}' and Donor_CNIC = '${d_cnic}' AND Pending_Accepted = 0;`,
-
-    (err) => {
-      if (err) {
-        console.log(err);
-      } else {
-        res.json("Rejected");
-      }
+  try {
+    const { r_cnic, d_cnic } = req.body;
+    
+    if (!r_cnic || !d_cnic) {
+      return res.status(400).json({ error: "Both receiver and donor CNIC are required" });
     }
-  );
+
+    const query = `
+      UPDATE Blood_Requests
+      SET Pending_Accepted = 3
+      WHERE Receiver_CNIC = ?
+      AND Donor_CNIC = ?
+      AND Pending_Accepted = 0
+    `;
+
+    const [result] = await connection.promise().query(query, [r_cnic, d_cnic]);
+    
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: "No matching request found or already processed" });
+    }
+
+    res.json({ message: "Request rejected successfully" });
+  } catch (error) {
+    console.error("Error in RejectRequest:", error);
+    res.status(500).json({ error: "An error occurred while rejecting the request" });
+  }
 });
 
 app.post("/ViewDonationHistory", async (req, res) => {
-  const { temp_cnic } = req.body;
-  connection.query(
-    `select * from users join blood_requests on blood_requests.receiver_cnic = users.cnic where blood_requests.donor_cnic = '${temp_cnic}' and Pending_Accepted = 1;`,
-    (err, result) => {
-      if (err) {
-        console.log(err);
-      } else {
-        res.send(result);
-      }
+  try {
+    const { temp_cnic } = req.body;
+    
+    if (!temp_cnic) {
+      return res.status(400).json({ error: "CNIC is required" });
     }
-  );
+
+    const query = `
+      SELECT users.*, blood_requests.*
+      FROM users
+      JOIN blood_requests ON blood_requests.receiver_cnic = users.cnic
+      WHERE blood_requests.donor_cnic = ?
+      AND blood_requests.Pending_Accepted = 1
+    `;
+
+    const [results] = await connection.promise().query(query, [temp_cnic]);
+    res.json(results);
+  } catch (error) {
+    console.error("Error in ViewDonationHistory:", error);
+    res.status(500).json({ error: "An error occurred while fetching donation history" });
+  }
 });
 
 app.post("/PendingRequests", async (req, res) => {
