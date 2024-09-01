@@ -164,41 +164,36 @@ app.post("/login", async (req, res) => {
 
 
 app.post("/loginAdmin", async (req, res) => {
-  let { user_email, user_password } = req.body;
-  connection.query(
-    `select * from users  WHERE users.email = '${user_email}' and Admin = 1`,
-    (err, result) => {
-      if (err) {
-        console.log(err);
-      } else {
-        if (result.length == 0) {
-          console.log("no such admin exists");
-          res.send({ error: "no such admin exists" });
-        } else {
-          bcrypt.compare(
-            user_password,
-            result[0].Password,
-            async (err, comparison_result) => {
-              if (err) {
-                console.log(err);
-              } else {
-                if (comparison_result) {
-                  if (result[0].Admin == 1) {
-                    req.session.user = result[0];
-                    res.send({ success: "login successful" });
-                  } else {
-                    res.send({ error: "not admin" });
-                  }
-                } else {
-                  res.send({ error: "incorrect password" });
-                }
-              }
-            }
-          );
-        }
-      }
+  const { user_email, user_password } = req.body;
+
+  try {
+    const [results] = await connection.promise().query(
+      'SELECT * FROM users WHERE email = ? AND Admin = 1',
+      [user_email]
+    );
+
+    if (results.length === 0) {
+      console.log("No such admin exists");
+      return res.status(404).json({ error: "No such admin exists" });
     }
-  );
+
+    const user = results[0];
+    const passwordMatch = await bcrypt.compare(user_password, user.Password);
+
+    if (!passwordMatch) {
+      return res.status(401).json({ error: "Incorrect password" });
+    }
+
+    if (user.Admin !== 1) {
+      return res.status(403).json({ error: "Not admin" });
+    }
+
+    req.session.user = user;
+    res.status(200).json({ success: "Login successful" });
+  } catch (error) {
+    console.error("Admin login error:", error);
+    res.status(500).json({ error: "An error occurred during admin login" });
+  }
 });
 
 app.get("/checkIfLoggedIn", (req, res) => {
