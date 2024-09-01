@@ -197,31 +197,35 @@ app.post("/loginAdmin", async (req, res) => {
 });
 
 app.get("/checkIfLoggedIn", (req, res) => {
-  if (req.session.user != null) {
-    res.send({ loggedIn: true, user_data: req.session.user });
-  } else {
-    res.send({ loggedIn: false });
-  }
+  const isLoggedIn = !!req.session.user;
+  res.json({
+    loggedIn: isLoggedIn,
+    user_data: isLoggedIn ? req.session.user : null
+  });
 });
 
 app.get("/checkIfAdminLoggedIn", (req, res) => {
-  if (req.session.user != null) {
-    if (req.session.user.Admin == 1) {
-      res.send({ loggedIn: true, admin_data: req.session.user });
-    } else {
-      res.send({ loggedIn: false });
-    }
-  } else {
-    res.send({ loggedIn: false });
-  }
+  const user = req.session.user;
+  const isAdminLoggedIn = user && user.Admin === 1;
+  res.json({
+    loggedIn: isAdminLoggedIn,
+    admin_data: isAdminLoggedIn ? user : null
+  });
 });
 
 app.get("/logout", (req, res) => {
-  req.session.user = null;
-  if (req.session.user == null) {
-    res.send({ loggedOut: true });
-  }
+  req.session.destroy((err) => {
+    if (err) {
+      console.error("Error destroying session:", err);
+      return res.status(500).json({ error: "Logout failed" });
+    }
+    res.json({ loggedOut: true });
+  });
 });
+
+
+
+
 
 app.post("/requestBloodList", (req, res) => {
   let { city, b_group, l_age, u_age, user_cnic } = req.body;
