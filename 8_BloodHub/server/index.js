@@ -225,26 +225,32 @@ app.get("/logout", (req, res) => {
 
 
 
+app.post("/requestBloodList", async (req, res) => {
+  try {
+    let { city, b_group, l_age, u_age, user_cnic } = req.body;
 
+    // Set default values for age range if not provided
+    l_age = l_age || "1";
+    u_age = u_age || "200";
 
-app.post("/requestBloodList", (req, res) => {
-  let { city, b_group, l_age, u_age, user_cnic } = req.body;
-  if (l_age == "") {
-    l_age = "1";
+    const query = `
+      SELECT * FROM users 
+      JOIN medical_records ON users.CNIC = medical_records.CNIC 
+      WHERE users.city = ? 
+        AND medical_records.age BETWEEN ? AND ? 
+        AND users.cnic != ? 
+        AND users.Approved = 1 
+        AND medical_records.last_donated < DATE_SUB(CURDATE(), INTERVAL 56 DAY) 
+        AND medical_records.blood_group = ?
+    `;
+
+    const [results] = await connection.promise().query(query, [city, l_age, u_age, user_cnic, b_group]);
+
+    res.json(results);
+  } catch (error) {
+    console.error("Error in requestBloodList:", error);
+    res.status(500).json({ error: "An error occurred while fetching blood list" });
   }
-  if (u_age == "") {
-    u_age = "200";
-  }
-  connection.query(
-    `select * from users join medical_records on users.CNIC = medical_records.CNIC where users.city = "${city}" and medical_records.age BETWEEN ${l_age} AND ${u_age} and users.cnic != "${user_cnic}" and users.Approved = 1 and  medical_records.last_donated < DATE_SUB(CURDATE(), INTERVAL 56 DAY) AND medical_records.blood_group = '${b_group}';`,
-    (err, result) => {
-      if (err) {
-        console.log(err);
-      } else {
-        res.send(result);
-      }
-    }
-  );
 });
 
 app.post("/ViewRequests", async (req, res) => {
