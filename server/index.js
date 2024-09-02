@@ -358,21 +358,29 @@ app.post("/ViewDonationHistory", async (req, res) => {
     res.status(500).json({ error: "An error occurred while fetching donation history" });
   }
 });
-
 app.post("/PendingRequests", async (req, res) => {
-  const { temp_cnic } = req.body;
-  connection.query(
-    `select * from users join blood_requests on blood_requests.donor_cnic = users.cnic where blood_requests.receiver_cnic = '${temp_cnic}' and Pending_Accepted = 0;`,
-    (err, result) => {
-      if (err) {
-        console.log(err);
-      } else {
-        res.send(result);
-      }
-    }
-  );
-});
+  try {
+    const { temp_cnic } = req.body;
 
+    if (!temp_cnic) {
+      return res.status(400).json({ error: "CNIC is required" });
+    }
+
+    const query = `
+      SELECT * 
+      FROM users 
+      JOIN blood_requests ON blood_requests.donor_cnic = users.cnic 
+      WHERE blood_requests.receiver_cnic = ? 
+      AND Pending_Accepted = 0
+    `;
+
+    const [result] = await connection.promise().query(query, [temp_cnic]);
+    res.json(result);
+  } catch (error) {
+    console.error("Error in PendingRequests:", error);
+    res.status(500).json({ error: "An error occurred while fetching pending requests" });
+  }
+});
 app.post("/UnsendRequest", async (req, res) => {
   const { r_cnic, d_cnic } = req.body;
   connection.query(
