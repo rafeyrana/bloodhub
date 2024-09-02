@@ -381,26 +381,30 @@ app.post("/PendingRequests", async (req, res) => {
     res.status(500).json({ error: "An error occurred while fetching pending requests" });
   }
 });
+
 app.post("/UnsendRequest", async (req, res) => {
   const { r_cnic, d_cnic } = req.body;
-  connection.query(
-    `UPDATE Blood_Requests SET Pending_Accepted = 3 WHERE Receiver_CNIC = '${r_cnic}' and Donor_CNIC = '${d_cnic}' AND Pending_Accepted = 0;`,
-    (err) => {
-      if (err) {
-        console.log(err);
-      } else {
-        connection.query(
-          `update users set Receiver_Request_Counter = Receiver_Request_Counter - 1 WHERE CNIC = '${r_cnic}';`,
-          (err) => {
-            if (err) {
-              console.log(err);
-            }
-          }
-        );
-        res.json("Unsent");
-      }
-    }
-  );
+
+  if (!r_cnic || !d_cnic) {
+    return res.status(400).json({ error: "Receiver CNIC and Donor CNIC are required" });
+  }
+
+  try {
+    await connection.promise().query(
+      `UPDATE Blood_Requests SET Pending_Accepted = 3 WHERE Receiver_CNIC = ? AND Donor_CNIC = ? AND Pending_Accepted = 0`,
+      [r_cnic, d_cnic]
+    );
+
+    await connection.promise().query(
+      `UPDATE users SET Receiver_Request_Counter = Receiver_Request_Counter - 1 WHERE CNIC = ?`,
+      [r_cnic]
+    );
+
+    res.json("Unsent");
+  } catch (err) {
+    console.error("Error in UnsendRequest:", err);
+    res.status(500).json({ error: "An error occurred while unsending the request" });
+  }
 });
 
 app.post("/ReceivedDonations", async (req, res) => {
